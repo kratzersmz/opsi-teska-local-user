@@ -1,0 +1,68 @@
+[Actions]
+requiredWinstVersion >= "4.11.2.1"
+ 
+setLogLevel=7
+DefVar $ProductName$
+DefVar $OpsiAdminPass$
+DefVar $local_user$
+DefVar $AdminGroup$
+DefVar $SearchResult$
+DefVar $flag_active$
+DefVar $val_userpasswd$
+DefVar $val_username$
+DefVar $UserExists$
+DefVar $LocalTempPath$
+DefStringlist $ResultList2$
+ 
+sub_get_properties
+
+comment "get the name of the admin group"
+
+   comment "Start setup program"
+   ChangeDirectory "%SCRIPTPATH%"
+   ;----------------------------------------------
+   DosInAnIcon_setpolicy
+   DosInAnIcon_CreateDir
+   Files_Copy
+   ExecWith_powershell  powershell.exe
+   set $exitcode$ = getLastExitcode
+   if not ($exitcode$ = "0")
+        comment "powershell script failed"
+   endif
+
+[DosInAnIcon_setpolicy]
+echo "powershell set-executionpolicy RemoteSigned ..."
+powershell.exe set-executionpolicy RemoteSigned
+exit %ERRORLEVEL%
+
+[ExecWith_powershell]
+$UserNames = '$local_user$'
+$ArrayUserNames = $Usernames.split(";")
+
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = 'Continue'
+
+#Declare LocalUser Object
+$ObjLocalUser = $null
+
+# start looping
+For ($i=0; $i -lt $ArrayUserNames.Length; $i++) {
+  Try {
+    Write-Verbose "Searching for $($ArrayUserNames[$i]) in LocalUser DataBase"
+    $ObjLocalUser = Get-LocalUser $ArrayUserNames[$i]
+
+    Write-Verbose "User $($ArrayUserNames[$i]) was found, updating PWs and Group"
+    Remove-LocalUser -Name $ArrayUserNames[$i] -ErrorAction SilentlyContinue
+  }
+  Catch {
+    "An unspecifed error occured" | Write-Error
+    Exit 2# Stop Powershell!
+  }
+}
+
+[sub_get_properties]
+comment "val_username"
+comment "description: admin username"
+set $local_user$= GetProductProperty("val_username", "locsupp")
+ 

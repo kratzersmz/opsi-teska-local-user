@@ -1,0 +1,185 @@
+[Actions]
+requiredWinstVersion >= "4.11.2.1"
+ 
+setLogLevel=3
+DefVar $ProductName$
+DefVar $local_user$
+DefVar $Group$
+DefVar $SearchResult$
+DefVar $val_userpasswd$
+DefVar $val_username$
+DefVar $val_groupmember$
+DefVar $UserExists$
+DefVar $UserGroup$
+DefVar $date_tomorrow$
+DefVar $pwd_expires$
+DefVar $ExitCode$
+DefVar $ErrorMsg$
+ 
+DefVar $LogDir$
+
+Set $LogDir$ = "%opsiLogDir%" 
+ 
+DefStringlist $ResultList$
+DefStringlist $ResultList2$
+DefStringlist $ResultList3$
+ 
+ 
+comment "val_userpasswd"
+comment "description: password"
+Set $val_userpasswd$ = GetProductProperty("val_userpasswd", "SecurePW!")
+ 
+comment "val_username"
+comment "description: admin username"
+Set $local_user$= GetProductProperty("val_username", "locsupp")
+ 
+comment "val_groupmember"
+comment "description: Groupemembership"
+Set $UserGroup$= GetProductProperty("val_groupmember", "Administratoren")
+ 
+comment "get the name of the admin group"
+
+Message "Installing " + $ProductId$ + " ..."
+   
+   if $LicenseRequired$ = "true"
+      comment "Licensing required, reserve license and get license key"
+      Sub_get_licensekey
+   endif
+
+   comment "Start setup program"
+   ChangeDirectory "%SCRIPTPATH%"
+   ;----------------------------------------------
+   DosInAnIcon_setpolicy
+   ExecWith_powershell  powershell.exe -ep bypass
+   set $exitcode$ = getLastExitcode
+   if not ($exitcode$ = "0")
+        comment "powershell script failed"
+   endif
+
+
+
+[DosInAnIcon_setpolicy]
+echo "powershell set-executionpolicy RemoteSigned ..."
+powershell.exe set-executionpolicy RemoteSigned
+exit %ERRORLEVEL%
+
+[ExecWith_powershell]
+# set Variables from Properties
+
+$UserGroups = '$Usergroup$'
+$ArrayGroups = $UserGroups.split(";")
+
+$UserNames = '$local_user$'
+$ArrayUserNames = $Usernames.split(";")
+
+$UserPasswords = '$val_userpasswd$'
+$ArrayUserPasswords = $UserPasswords.split(";")
+
+# start checking array sizes
+if ($ArrayUserNames.Length -ne $ArrayGroups -ne $ArrayUserPasswords) {
+  write-host "Array sizes of Usergroups, Usernames or Userpasswords does not fit"
+  exit 1
+
+#set-executionpolicy unrestricted
+
+#$UserNames = @("Admin1;Lehrer;Schueler")
+#$UserPasswords = @("pwadmin3KKJ!!!;pwlKehrer1211K2!;pwlKehrer1211K2")
+#$UserGroups = @("Administratoren;Benutzer;Benutzer")
+
+$ArrayUserNames = $Usernames.split(";")
+$ArrayUserPasswords = $UserPasswords.split(";")
+$ArrayGroups = $UserGroups.split(";")
+
+# start checking array sizes
+if ($ArrayUserNames.Length -ne $ArrayGroups -ne $ArrayUserPasswords) {
+  write-host "Array sizes of Usergroups, Usernames or Userpasswords does not fit"
+  exit 1
+}
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = 'Continue'
+
+# start looping
+For ($i=0; $i -lt $ArrayUserNames.Length; $i++) {
+  $ObjLocalUser = $null
+  Try {
+    Write-Verbose "Searching for $($ArrayUserNames[$i]) in LocalUser DataBase"
+    $ObjLocalUser = Get-LocalUser $ArrayUserNames[$i]
+    Write-Verbose "User $($ArrayUserNames[$i]) was found"
+  }
+
+  Catch [Microsoft.PowerShell.Commands.UserNotFoundException] {
+    "User $($ArrayUserNames[$i]) was not found" | Write-Warning
+  }
+
+  Catch {
+    "An unspecifed error occured" | Write-Error
+    Exit 2# Stop Powershell! 
+  }
+
+  #Create the user if it was not found (Example)
+  If (!$ObjLocalUser) {
+    Write-Verbose "Creating User $($ArrayUserNames[$i])" #(Example)
+    $SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
+    New-LocalUser -Name $ArrayUserNames[$i] -Password $SecurePassword -AccountNeverExpires -PasswordNeverExpires -FullName $ArrayUserNames[$i] -UserMayNotChangePassword
+    # Add User to group
+    Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i] 
+  }
+}
+
+
+[DosInAnIcon_removal]
+echo "removal of fonts ..."
+powershell.exe -ep bypass -file c:\tmp\remove.ps1 C:\tmp\fonts
+
+[DosInAnIcon_install]
+echo "installing ..."
+powershell.exe -ep bypass -file c:\tmp\install.ps1 -path C:\tmp\fonts
+
+
+[DosInAnIcon_do]
+cd $TmpPath$\fonts
+$InstPrg$ $TmpPath$\fonts
+%ScriptPath%\FontReg.exe %ScriptPath%\fonts
+%ScriptPath%\FontReg.exe $TmpPath$\fonts
+
+
+[Files_uninstall]
+rem del -sf "$TmpPath$\"
+
+[Sub_get_licensekey]
+if opsiLicenseManagementEnabled
+   comment "License management is enabled and will be used"
+
+   comment "Trying to get a license key"
+   Set $LicenseKey$ = demandLicenseKey ($LicensePool$)
+   ; If there is an assignment of exactly one licensepool to the product the following call is possible:
+   ; Set $LicenseKey$ = demandLicenseKey ("", $ProductId$)
+   ;
+   ; If there is an assignment of a license pool to a windows software id, it is possible to use:
+   ; DefVar $WindowsSoftwareId$
+   ; $WindowsSoftwareId$ = "..."
+   ; Set $LicenseKey$ = demandLicenseKey ("", "", $WindowsSoftwareId$)
+   
+   DefVar $ServiceErrorClass$
+   set $ServiceErrorClass$ = getLastServiceErrorClass
+   comment "Error class: " + $ServiceErrorClass$
+   
+   if $ServiceErrorClass$ = "None"
+      comment "Everything fine, we got the license key '" + $LicenseKey$ + "'"
+   else
+      if $ServiceErrorClass$ = "LicenseConfigurationError"
+         LogError "Fatal: license configuration must be corrected"
+         LogError getLastServiceErrorMessage
+         isFatalError
+      else 
+         if $ServiceErrorClass$ = "LicenseMissingError"
+            LogError "Fatal: required license is not supplied"
+            isFatalError
+         endif
+      endif
+   endif
+else
+   LogError "Fatal: license required, but license management not enabled"
+   isFatalError
+endif
