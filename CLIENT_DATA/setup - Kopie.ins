@@ -27,26 +27,27 @@ DefStringlist $ResultList3$
  
 comment "val_userpasswd"
 comment "description: password"
-Set $val_userpasswd$ = GetProductProperty("val_userpasswd", "SecurePW!")
+;Set $val_userpasswd$ = GetProductProperty("val_userpasswd", "SecurePW!")
  
 comment "val_username"
 comment "description: admin username"
-Set $local_user$= GetProductProperty("val_username", "locsupp")
+;Set $local_user$= GetProductProperty("val_username", "locsupp")
  
 comment "val_groupmember"
 comment "description: Groupemembership"
-Set $UserGroup$= GetProductProperty("val_groupmember", "Administratoren")
+;Set $UserGroup$= GetProductProperty("val_groupmember", "Administratoren")
  
 comment "get the name of the admin group"
 
-Message "Updating TEska local User"
+Message "Installing Teska Local User"
    
+ 
 
    comment "Start setup program"
    ChangeDirectory "%SCRIPTPATH%"
    ;----------------------------------------------
-   DosInAnIcon_setpolicy
-   ExecWith_powershell  powershell.exe
+   ;DosInAnIcon_setpolicy
+   ExecWith_powershell powershell.exe winst /64Bit 
    set $exitcode$ = getLastExitcode
    if not ($exitcode$ = "0")
         comment "powershell script failed"
@@ -57,20 +58,28 @@ Message "Updating TEska local User"
 [DosInAnIcon_setpolicy]
 echo "powershell set-executionpolicy RemoteSigned ..."
 powershell.exe set-executionpolicy RemoteSigned
+powershell.exe Unblock-File %OPSITMPDIR%\get_model.ps1
+
 exit %ERRORLEVEL%
 
 [ExecWith_powershell]
-$UserGroups = '$Usergroup$'
+# set Variables from Properties
+
+$UserNames = @("Admin1;Lehrer;Schueler")
+$UserPasswords = @("pwadmin3KKJ!!!;pwlKehrer1211K2!;pwlKehrer1211K2")
+$UserGroups = @("Administratoren;Benutzer;Benutzer")
+
+;$UserGroups = '$Usergroup$'
 $ArrayGroups = $UserGroups.split(";")
 
-$UserNames = '$local_user$'
+;$UserNames = '$local_user$'
 $ArrayUserNames = $Usernames.split(";")
 
-$UserPasswords = '$val_userpasswd$'
+;$UserPasswords = '$val_userpasswd$'
 $ArrayUserPasswords = $UserPasswords.split(";")
 
 
-#start checking array sizes
+# start checking array sizes
 if ($ArrayUserNames.Length -ne $ArrayGroups -ne $ArrayUserPasswords) {
   write-host "Array sizes of Usergroups, Usernames or Userpasswords does not fit"
   exit 1
