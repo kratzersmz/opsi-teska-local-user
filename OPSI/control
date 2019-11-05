@@ -20,7 +20,6 @@ onceScript:
 customScript: 
 userLoginScript: 
 
-
 [ProductProperty]
 type: unicode
 name: val_username
@@ -47,3 +46,4 @@ editable: True
 description: Passwort des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
 values: ["Adminpw123;Lehrerpw8784;123456789", "SecurePW!"]
 default: ["SecurePW!"]
+
