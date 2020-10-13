@@ -8,7 +8,7 @@ id: teska-local-user
 name: teska-local-user
 description: Installiert locale user im Format User1;User3;.... Benutzer;Administratoren; .... PwfuerUser1;PwfuerUser2; .....
 advice: 
-version: 1.0
+version: 1.1
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -19,7 +19,6 @@ alwaysScript:
 onceScript: 
 customScript: 
 userLoginScript: 
-
 
 [ProductProperty]
 type: unicode

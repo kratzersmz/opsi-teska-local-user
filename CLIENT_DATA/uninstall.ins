@@ -22,9 +22,7 @@ comment "get the name of the admin group"
    ChangeDirectory "%SCRIPTPATH%"
    ;----------------------------------------------
    DosInAnIcon_setpolicy
-   DosInAnIcon_CreateDir
-   Files_Copy
-   ExecWith_powershell  powershell.exe
+   ExecWith_powershell "%System%\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy bypass winst /SysNative
    set $exitcode$ = getLastExitcode
    if not ($exitcode$ = "0")
         comment "powershell script failed"
@@ -39,15 +37,12 @@ exit %ERRORLEVEL%
 $UserNames = '$local_user$'
 $ArrayUserNames = $Usernames.split(";")
 
-
 $ErrorActionPreference = 'Stop'
 $VerbosePreference = 'Continue'
 
-#Declare LocalUser Object
-$ObjLocalUser = $null
-
 # start looping
 For ($i=0; $i -lt $ArrayUserNames.Length; $i++) {
+  $ObjLocalUser = $null
   Try {
     Write-Verbose "Searching for $($ArrayUserNames[$i]) in LocalUser DataBase"
     $ObjLocalUser = Get-LocalUser $ArrayUserNames[$i]
