@@ -26,8 +26,8 @@ name: val_username
 multivalue: False
 editable: True
 description: Benutzername des lokalen User, getrennt durch ; bei Mehrfacheinträgen
-values: ["Admin", "Admin;Lehrer;Schueler"]
-default: ["Admin"]
+values: ["offline", "Admin", "Admin;Lehrer;Schueler"]
+default: ["offline"]
 
 [ProductProperty]
 type: unicode
@@ -35,8 +35,8 @@ name: val_groupmember
 multivalue: False
 editable: True
 description: Gruppenmitgliedschaft des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
-values: ["offline", "Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
-default: ["offline", "Administratoren"]
+values: ["Benutzer", "Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
+default: ["Benutzer"]
 
 [ProductProperty]
 type: unicode
