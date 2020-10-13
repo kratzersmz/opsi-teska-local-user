@@ -36,14 +36,14 @@ name: val_groupmember
 multivalue: False
 editable: True
 description: Gruppenmitgliedschaft des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
-values: ["Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
-default: ["Administratoren"]
+values: ["offline", "Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
+default: ["offline", "Administratoren"]
 
 [ProductProperty]
 type: unicode
-name: val_userpasswd
+name: password
 multivalue: False
 editable: True
-description: Passwort des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
-values: ["Adminpw123;Lehrerpw8784;123456789", "SecurePW!"]
-default: ["SecurePW!"]
+description: Password des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
+values: ["offline", "Adminpw123;Lehrerpw8784;123456789", "SecurePW!"]
+default: ["offline", "SecurePW!"]
