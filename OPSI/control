@@ -45,4 +45,4 @@ multivalue: False
 editable: True
 description: Password des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
 values: ["offline", "Adminpw123;Lehrerpw8784;123456789", "SecurePW!"]
-default: ["offline", "SecurePW!"]
+default: ["offline"]
