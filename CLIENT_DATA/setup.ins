@@ -99,7 +99,7 @@ For ($i=0; $i -lt $ArrayUserNames.Length; $i++) {
     Write-Verbose "Searching for $($ArrayUserNames[$i]) in LocalUser DataBase"
     $ObjLocalUser = Get-LocalUser $ArrayUserNames[$i]
     Write-Verbose "User $($ArrayUserNames[$i]) was found, modifying..."
-	$SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
+    $SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
     if ($ArrayPwchange[$i] -eq 'y') { set-localuser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires:$true -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayChangePassword:$true }
     else { set-localuser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires:$true -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayChangePassword:$false  }
     Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i] -ErrorAction SilentlyContinue
