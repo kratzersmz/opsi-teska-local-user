@@ -9,6 +9,7 @@ DefVar $SearchResult$
 DefVar $val_userpasswd$
 DefVar $val_username$
 DefVar $val_groupmember$
+DefVar $val_pwchange$
 DefVar $UserExists$
 DefVar $UserGroup$
 DefVar $date_tomorrow$
@@ -36,8 +37,11 @@ Set $local_user$= GetProductProperty("val_username", "locsupp")
 comment "val_groupmember"
 comment "description: Groupemembership"
 Set $UserGroup$= GetProductProperty("val_groupmember", "Administratoren")
+
  
-comment "get the name of the admin group"
+comment "val_pwchange"
+comment "description: pwchange"
+Set $val_pwchange$= GetProductProperty("pwchange", "n")
 
 Message "Installing Teska Local User"
    
@@ -68,16 +72,19 @@ exit %ERRORLEVEL%
 $UserGroups = '$Usergroup$'
 $UserNames = '$local_user$'
 $UserPasswords = '$val_userpasswd$'
+$UserPwchange = '$val_pwchange$'
 
 
 $ArrayUserNames = $Usernames.split(";")
 $ArrayUserPasswords = $UserPasswords.split(";")
 $ArrayGroups = $UserGroups.split(";")
+$ArrayPwchange = $UserPwchange.split(";")
 
-
+write-host $ArrayUserNames.Length $ArrayGroups.length $ArrayUserPasswords.length  $ArrayPwchange.length
 
 # start checking array sizes
-if ($ArrayUserNames.Length -ne $ArrayGroups -ne $ArrayUserPasswords) {
+
+if ($ArrayUserNames.Length -ne $ArrayGroups.length -ne $ArrayUserPasswords.length -ne $ArrayPwchange.length) {
   write-host "Array sizes of Usergroups, Usernames or Userpassword does not fit"
   exit 1
 }
@@ -85,40 +92,37 @@ if ($ArrayUserNames.Length -ne $ArrayGroups -ne $ArrayUserPasswords) {
 $ErrorActionPreference = 'Stop'
 $VerbosePreference = 'Continue'
 
-
-
 # start looping
 For ($i=0; $i -lt $ArrayUserNames.Length; $i++) {
-   Write-Verbose "Creating User $($ArrayUserNames[$i])" #(Example)
-   $SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
-   New-LocalUser -Name $ArrayUserNames[$i] -Password $SecurePassword -AccountNeverExpires -PasswordNeverExpires -FullName $ArrayUserNames[$i] -UserMayNotChangePassword -ErrorAction SilentlyContinue
-   # Add User to group
-   Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i] -ErrorAction SilentlyContinue
-}
-  
-  <#$ObjLocalUser = $null
+ $ObjLocalUser = $null
   Try {
     Write-Verbose "Searching for $($ArrayUserNames[$i]) in LocalUser DataBase"
     $ObjLocalUser = Get-LocalUser $ArrayUserNames[$i]
-    Write-Verbose "User $($ArrayUserNames[$i]) was found"
+    Write-Verbose "User $($ArrayUserNames[$i]) was found, modifying..."
+	$SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
+    if ($ArrayPwchange[$i] -eq 'y') { set-localuser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires:$true -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayChangePassword:$true }
+    else { set-localuser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires:$true -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayChangePassword:$false  }
+    Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i] -ErrorAction SilentlyContinue
   }
 
   Catch [Microsoft.PowerShell.Commands.UserNotFoundException] {
     "User $($ArrayUserNames[$i]) was not found" | Write-Warning
   }
 
-  Catch {
-    "An unspecifed error occured" | Write-Error
-    Exit 2# Stop Powershell!
-  }
+  #Catch {
+  #  "An unspecifed error occured" | Write-Error
+  #  Exit 2# Stop Powershell!
+  #}
 
   #Create the user if it was not found (Example)
   If (!$ObjLocalUser) {
-    Write-Verbose "Creating User $($ArrayUserNames[$i])" #(Example)
-    $SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
-    New-LocalUser -Name $ArrayUserNames[$i] -Password $SecurePassword -AccountNeverExpires -PasswordNeverExpires -FullName $ArrayUserNames[$i] -UserMayNotChangePassword
-    # Add User to group
-    Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i]
+   Write-Verbose "Exists Creating User $($ArrayUserNames[$i])" #(Example)
+   $SecurePassword = ConvertTo-SecureString $ArrayUserPasswords[$i] -AsPlainText -Force
+   $Commandnewuser =  "New-LocalUser -Name $ArrayUserNames[$i]  -AccountNeverExpires -PasswordNeverExpires -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue"
+   if ($ArrayPwchange[$i] -eq 'y') { New-LocalUser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayNotChangePassword:$false}
+   else { New-LocalUser -Name $ArrayUserNames[$i]  -AccountNeverExpires -Password $SecurePassword -PasswordNeverExpires -FullName $ArrayUserNames[$i] -ErrorAction SilentlyContinue -UserMayNotChangePassword:$true }
+
+   # Add User to group
+   Add-LocalGroupMember -Group $ArrayGroups[$i] -Member $ArrayUserNames[$i] -ErrorAction SilentlyContinue
   }
 }
-#>
