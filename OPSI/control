@@ -1,5 +1,5 @@
 [Package]
-version: 1
+version: 3
 depends: 
 
 [Product]
@@ -8,13 +8,13 @@ id: teska-local-user
 name: teska-local-user
 description: Installiert locale user im Format User1;User3;.... Benutzer;Administratoren; .... PwfuerUser1;PwfuerUser2; .....
 advice: 
-version: 1.1
+version: 1.2
 priority: 0
 licenseRequired: False
 productClasses: 
 setupScript: setup.ins
 uninstallScript: uninstall.ins
-updateScript: update.ins
+updateScript: 
 alwaysScript: 
 onceScript: 
 customScript: 
@@ -26,7 +26,7 @@ name: val_username
 multivalue: False
 editable: True
 description: Benutzername des lokalen User, getrennt durch ; bei Mehrfacheinträgen
-values: ["offline", "Admin", "Admin;Lehrer;Schueler"]
+values: ["Admin", "Admin;Lehrer;Schueler", "offline"]
 default: ["offline"]
 
 [ProductProperty]
@@ -35,7 +35,7 @@ name: val_groupmember
 multivalue: False
 editable: True
 description: Gruppenmitgliedschaft des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
-values: ["Benutzer", "Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
+values: ["Administratoren", "Adminstratoren;Administratoren;Benutzer", "Benutzer", "Gaeste"]
 default: ["Benutzer"]
 
 [ProductProperty]
@@ -44,5 +44,15 @@ name: password
 multivalue: False
 editable: True
 description: Password des lokalen Users, getrennt durch ; bei Mehrfacheinträgen
-values: ["offline", "Adminpw123;Lehrerpw8784;123456789", "SecurePW!"]
+values: ["Adminpw123;Lehrerpw8784;123456789", "SecurePW!", "offline"]
 default: ["offline"]
+
+[ProductProperty]
+type: unicode
+name: pwchange
+multivalue: False
+editable: True
+description: Lege mit n für no und y für yes fest ob pw geändert werden kann
+values: ["n", "n;y;y", "y"]
+default: ["n"]
+
